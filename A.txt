@@ -1,0 +1,23 @@
+try:
+    while tries < 10000:
+        #print(tries)
+        if equal_fitness_counter > 50:
+            old_best = vrp.population[0].copy()
+            vrp.init_random_population(False)
+            vrp.population[0] = old_best
+            equal_fitness_counter = 0
+            print("Restarting...\n")
+        ch, f,pop = numba_run(vrp.population,vrp.capacities,edge_weights_numba,vrp.truck_capacity,vrp.n_clients,n_iterations=2000,decimation_factor=4,mutation_p=random.random()*0.15)
+        #print(vrp.population[22])
+        #print(pop[22])
+        chs.append(ch)
+        fs.append(f)
+        print(f,end=',',flush=True)
+        tries+=1
+        if previous_f == f:
+            equal_fitness_counter +=1
+        else:
+            equal_fitness_counter = 0
+        previous_f  = f
+except KeyboardInterrupt:
+    pass
