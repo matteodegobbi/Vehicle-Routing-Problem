@@ -54,7 +54,7 @@ class VRP:
         self.n_clients = n_clients
         self.n_trucks = n_trucks
         self.truck_capacity = truck_capacity
-        self.POPULATION_SIZE = 200
+        self.POPULATION_SIZE = 128
         if warehouse_loc is None:
             self.warehouse_loc = (random.random()*map_width,random.random()*map_height)
         else:
