@@ -15,17 +15,19 @@ def numba_fitness(curr_chromosome,capacities,edge_weights,truck_capacity):
         capacity_curr += capacities[curr_chromosome[i]]
         #print(capacity_curr.shape)
         if capacity_curr > truck_capacity:
-            #ended route
+            #ended route, capacity is full
             curr_truck+=1
             total_distance+= (edge_weights[(curr_chromosome[i-1],-1)] + edge_weights[(-1,curr_chromosome[i])])
             capacity_curr = capacities[curr_chromosome[i]]
         else:
+            #route is not ended
             total_distance+= edge_weights[(curr_chromosome[i-1],curr_chromosome[i])]
     total_distance+=edge_weights[(len(curr_chromosome)-1,-1)]
     curr_truck += 1
     return total_distance
 @njit
 def numba_run(population,capacities,edge_weights,truck_capacity,n_clients,n_iterations : int = 100,decimation_factor :int = 5,mutation_p:float = 0.2):
+    # main function that runs the GA for n_iterations
     kept_population = len(population)//decimation_factor
     fitnesses = np.empty(len(population))
     iteration_best_fitness = np.inf
@@ -48,7 +50,7 @@ def numba_run(population,capacities,edge_weights,truck_capacity,n_clients,n_iter
         #selected_indices = temp_range[np.searchsorted(np.cumsum(probs), np.random.random(), side="right")]
         selected_indices = numba_choice(temp_range,probs,kept_population)
         population[0:kept_population] = population[selected_indices]
-        ###GENERATE NEW POPULATION with EAX
+        ###GENERATE NEW POPULATION with AEX
         new_population_index = 0
         while new_population_index < len(population):
             np.random.shuffle(population[:kept_population])
@@ -68,7 +70,7 @@ def numba_run(population,capacities,edge_weights,truck_capacity,n_clients,n_iter
                 temp = population[index1]
                 population[index1] = population[index2]
                 population[index2] = temp
-        ###ELITISM
+        ###ELITISM, always keep the best chromosome
         if iteration_best_chromosome is not None:
             population[0] = iteration_best_chromosome.copy()
         if iteration_best_fitness < best_fitness:
@@ -78,6 +80,7 @@ def numba_run(population,capacities,edge_weights,truck_capacity,n_clients,n_iter
 
 @njit
 def numba_aex(population,index_chrom1 : int , index_chrom2 : int,n_clients):
+    # fast implementation of the alternating edge crossover
     new_chrom = np.empty_like(population[index_chrom1])
     current_gene = population[index_chrom1][0]
     new_chrom[0] = current_gene
@@ -99,6 +102,7 @@ def numba_aex(population,index_chrom1 : int , index_chrom2 : int,n_clients):
     return new_chrom
 @njit
 def numba_choice(population, weights, k):
+    #function to sample chromosomes based on their fitness
     # Get cumulative weights
     wc = np.cumsum(weights)
     # Total of weights
